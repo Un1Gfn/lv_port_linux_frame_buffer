@@ -6,7 +6,11 @@
 #include <time.h>
 #include <sys/time.h>
 
+#include "lv_drivers/indev/evdev.h"
+
 #define DISP_BUF_SIZE (128 * 1024)
+
+#include "./mouse_cursor_icon.c"
 
 int main(void)
 {
@@ -31,6 +35,20 @@ int main(void)
     disp_drv.hor_res    = 800;
     disp_drv.ver_res    = 480;
     lv_disp_drv_register(&disp_drv);
+
+    /*Initialize and register a evdev driver*/
+    evdev_init();
+    lv_indev_drv_t indev_drv;
+    lv_indev_drv_init(&indev_drv);
+    indev_drv.type = LV_INDEV_TYPE_POINTER;
+    indev_drv.read_cb = evdev_read;
+    lv_indev_drv_register(&indev_drv);
+
+    lv_indev_t * mouse_indev = lv_indev_drv_register(&indev_drv);
+    LV_IMG_DECLARE(mouse_cursor_icon); /*Declare the image file.*/
+    lv_obj_t * cursor_obj = lv_img_create(lv_scr_act());       /*Create an image object for the cursor */
+    lv_img_set_src(cursor_obj, &mouse_cursor_icon);             /*Set the image source*/
+    lv_indev_set_cursor(mouse_indev, cursor_obj);               /*Connect the image  object to the driver*/
 
     /*Create a Demo*/
     lv_demo_widgets();
